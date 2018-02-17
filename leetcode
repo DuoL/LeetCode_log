@@ -1,0 +1,198 @@
+02.16.2018
+Array:
+
+LC 31. Next Permutation:
+Assumption: Integers, unsorted, optimize the memory
+Input: int array
+Output: none
+Method 1(not so good): 
+	Sort the array and use DFS to find every permutation
+	For each solution check if it is greater than input
+		return        if yes
+		continue      otherwize
+	Time Complexity: O(n!)
+	Space Complexity: O(n)
+
+Method 2:
+	Think: what is the next permutation that is larger than this one?
+	For example: 123 --> 132, 1230 --> 1302, 132 --> 213
+	What we found: We look from the end to front at result, it is increasing after some index
+		       The number on this index is the largest among all the increasing array
+		       How to find this index ?
+				1. iterate from end to front find the first element which is larger than the previous element
+				2. find the first larger element in the iterated array from end to front
+				3. swap the smaller element with the larger element
+				4. reverse all the elements after the index
+	We can get our next permutation
+class Solution {
+    public void nextPermutation(int[] nums) {
+        if (nums == null || nums.length == 0) {
+            return;
+        }
+        int index = -1;
+        for (int i = nums.length - 1; i >= 1; i--) {
+            if (nums[i - 1] < nums[i]) {
+                index = i - 1;
+                break;
+            }
+        }
+	//Corner case: what if we cannot find the first smaller element? It means this is the largest permutation
+        if (index == -1) {
+            reverse(nums, index + 1);
+            return;
+        }
+        for (int i = nums.length - 1; i > index; i--) {
+            if (nums[i] > nums[index]) {
+                swap(nums, i, index);
+                break;
+            }
+        }
+        reverse(nums, index + 1);
+    }
+    private void swap(int[] nums, int i, int j) {
+        int temp = nums[i];
+        nums[i] = nums[j];
+        nums[j] = temp;
+    }
+    private void reverse(int[] nums, int i) {
+        int j = nums.length - 1;
+        while (i < j) {
+            swap(nums, i++, j--);
+        }
+    }
+}
+Time Complexity: O(n)
+Space Complexity: O(1)
+
+LaiCode 268. Search In Sorted Matrix II
+Assumption: matrix is not null, Integers, sorted in row and column
+Input: 2D matrix and a target
+Output: index of the target otherwize {-1, -1}
+Method 1 (brute force):
+	For For loop to find if matrix[i][j] == target
+	Time Complexity: O(n ^ 2)
+	Space Complexity: O(1)
+
+Method 2 (start from BottomLeft):
+	We will face 3 conditions:
+		1. return index      if target == matrix[i][j]
+		2. i--		     if target < matrix[i][j]
+		3. j++     	     if target > matrix[i][j]
+
+public class Solution {
+  public int[] search(int[][] matrix, int target) {
+    // Write your solution here
+    if (matrix.length == 0 || matrix[0].length == 0) {
+    	return new int[]{-1, -1};
+    }
+    int m = matrix.length;
+    int n = matrix[0].length;
+    int row = m - 1;
+    int col = 0;
+    while (row >= 0 && col < n) {
+    	if (target == matrix[row][col]) {
+      	return new int[]{row, col};
+      } else if (target > matrix[row][col]) {
+      	col++;
+      } else {
+      	row--;
+      }
+    }
+    return new int[]{-1, -1};
+  }
+}
+Time Complexity: O(m + n)
+Space Complexity: O(1)
+
+LaiCode 164. Minimum Path Sum
+Assumption: non-negative, Integers, unsorted
+Input: 2D matrix
+Output: minimum sum of all path
+Method 1 (Dynamic programming):
+	M[i][j] stands for from 0, 0 to i, j the minimum sum of all path
+	basecase: M[0][0] = matrix[0][0] 
+	induction rule: M[i][j] = min(M[i - 1][j], M[i][j - 1]) + matrix[i][j] if i > 0 && j > 0
+			M[i][j] = M[i - 1][j] + matrix[i][j] if j == 0
+			M[i][j] = M[i][j - 1] + matrix[i][j] if i == 0
+public class Solution {
+  public int miniSum(int[][] grid) {
+    // Write your solution here
+    if (grid == null || grid.length == 0 || grid[0].length == 0) {
+    	return 0;
+    }
+    int m = grid.length; 
+    int n = grid[0].length;
+    int[][] M = new int[m][n];
+    M[0][0] = grid[0][0];
+    for (int i = 0; i < m; i++) {
+    	for (int j = 0; j < n; j++) {
+      	if (i == 0 && j == 0) {
+        	continue;
+        }
+        if (i == 0) {
+        	M[i][j] = M[i][j - 1] + grid[i][j];
+        } else if (j == 0) {
+        	M[i][j] = M[i - 1][j] + grid[i][j];
+        } else {
+        	M[i][j] = Math.min(M[i - 1][j], M[i][j - 1]) + grid[i][j];
+        }
+      }
+    }
+    return M[m - 1][n - 1];
+  }
+}
+Time Complexity: O(n ^ 2)
+Space Complexity: O(n ^ 2)
+
+Follow up: the space complexity is too high can you optimize the space?
+We can find every time we just look back at the previous one element in the array
+So we need to record only one row or col because every step we only choose either left or top
+
+public class Solution {
+  public int miniSum(int[][] grid) {
+    // Write your solution here
+    if (grid == null || grid.length == 0 || grid[0].length == 0) {
+    	return 0;
+    }
+    int m = grid.length;
+    int n = grid[0].length;
+    int[] row = new int[n];//Record the first line
+    row[0] = grid[0][0];
+    for (int i = 1; i < n; i++) {
+    	row[i] = row[i - 1] + grid[0][i];
+    }
+    for (int i = 1 ; i < m; i++) {
+      row[0] += grid[i][0]; //update the first element in basecase
+    	for (int j = 1; j < n; j++) {
+      	row[j] = Math.min(row[j], row[j - 1]) + grid[i][j];
+      }
+    }
+    return row[n - 1];
+  }
+}
+Space Complexity: Min(O(row), O(col))
+
+Too extreme but no extra space is follows, we just do the operation on the original input
+public class Solution {
+  public int miniSum(int[][] grid) {
+    // Write your solution here
+    if (grid == null || grid.length == 0 || grid[0].length == 0) {
+    	return 0;
+    }
+    int m = grid.length;
+    int n = grid[0].length;
+    for (int i = 1; i < m; i++) {
+    	grid[i][0] += grid[i - 1][0];
+    }
+    for (int j = 1; j < n; j++) {
+    	grid[0][j] += grid[0][j - 1];
+    }
+    for (int i = 1; i < m; i++) {
+    	for (int j = 1; j < n; j++) {
+      	grid[i][j] += Math.min(grid[i - 1][j], grid[i][j - 1]);
+      }
+    }
+    return grid[m - 1][n - 1];
+  }
+}
+Space Complexity: O(1) but destroy the input so not recommend at all.
